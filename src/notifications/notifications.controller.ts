@@ -12,10 +12,14 @@ import {
 } from '@nestjs/common';
 import { NotificationsService } from './notifications.service';
 import { CreateNotificationDto } from './dto/create-notification.dto';
+import { EmailService } from 'src/email/email.service';
 
 @Controller('notifications')
 export class NotificationsController {
-  constructor(private readonly notificationsService: NotificationsService) { }
+  constructor(
+    private readonly notificationsService: NotificationsService,
+    private readonly emailService: EmailService
+  ) { }
 
   @Get('user/:userId')
   async getUserNotifications(
@@ -31,18 +35,30 @@ export class NotificationsController {
     return this.notificationsService.getUnreadCount(userId);
   }
 
-  @Put('notifications/:id/mark-read')
+  @Put(':id/mark-read')
   async markAsRead(@Param('id') id: string) {
     return this.notificationsService.markAsRead(id);
   }
 
-  @Post('notifications')
-  @HttpCode(HttpStatus.CREATED)
+  // POST - Llamado por Azure Function
+  @Post()
   async createNotification(@Body() dto: CreateNotificationDto) {
-    return this.notificationsService.create(dto);
+    const notification = await this.notificationsService.create(dto);
+
+    // Enviar email si es high priority
+    if (dto.priority === 'high') {
+      await this.emailService.sendNotificationEmail({
+        ...notification,
+        userEmail: dto.userEmail,
+        userName: dto.userName
+      });
+    }
+
+    return notification;
   }
 
-  @Delete('notifications/:notificationId')
+
+  @Delete(':notificationId')
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteNotification(@Param('notificationId') notificationId: string) {
     await this.notificationsService.delete(notificationId);

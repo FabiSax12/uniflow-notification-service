@@ -1,9 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { ScheduleModule } from '@nestjs/schedule'; // 👈 Importante
 import { NotificationsModule } from './notifications/notifications.module';
-import { QueueModule } from './queue/queue.module';
 import { EmailModule } from './email/email.module';
 
 @Module({
@@ -11,7 +9,6 @@ import { EmailModule } from './email/email.module';
     ConfigModule.forRoot({
       isGlobal: true, // Hacer .env disponible en toda la app
     }),
-    ScheduleModule.forRoot(), // 👈 Habilitar cron jobs
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: process.env.DATABASE_HOST,
@@ -24,7 +21,6 @@ import { EmailModule } from './email/email.module';
       logging: false,
     }),
     NotificationsModule,
-    QueueModule,
     EmailModule,
   ],
 })
