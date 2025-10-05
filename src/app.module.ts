@@ -19,7 +19,7 @@ import { NotificationModule } from './notification.module';
           retryWrites: true,
           w: 'majority',
           // For Azure CosmosDB compatibility
-          ssl: process.env.NODE_ENV === 'production',
+          // ssl: process.env.NODE_ENV === 'production',
           authSource: process.env.MONGODB_AUTH_SOURCE || 'admin',
         };
       },
@@ -27,4 +27,4 @@ import { NotificationModule } from './notification.module';
     NotificationModule,
   ],
 })
-export class AppModule {}
+export class AppModule { }
