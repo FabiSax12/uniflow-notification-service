@@ -38,11 +38,6 @@ jobs:
       - name: Build application
         run: pnpm run build
 
-      - name: Clean and install production dependencies
-        run: |
-          rm -rf node_modules
-          pnpm install --prod --frozen-lockfile
-
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
