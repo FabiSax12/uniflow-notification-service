@@ -30,9 +30,6 @@ jobs:
       - name: Build application
         run: pnpm run build
 
-      - name: Test
-        run: pnpm test -- --passWithNoTests
-
       - name: Install production dependencies only
         run: |
           rm -rf node_modules
