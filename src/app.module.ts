@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { TypeOrmModule } from '@nestjs/typeorm';
+import { MongooseModule } from '@nestjs/mongoose';
 import { NotificationModule } from './notification.module';
 
 @Module({
@@ -8,16 +8,21 @@ import { NotificationModule } from './notification.module';
     ConfigModule.forRoot({
       isGlobal: true,
     }),
-    TypeOrmModule.forRoot({
-      type: 'postgres',
-      host: process.env.DATABASE_HOST,
-      port: parseInt(process.env.DATABASE_PORT ?? '5432', 10),
-      username: process.env.DATABASE_USER,
-      password: process.env.DATABASE_PASSWORD,
-      database: process.env.DATABASE_NAME,
-      entities: [__dirname + '/**/*.typeorm-entity{.ts,.js}'],
-      synchronize: process.env.NODE_ENV === 'development',
-      logging: false,
+    MongooseModule.forRootAsync({
+      useFactory: () => {
+        const uri =
+          process.env.MONGODB_URI ||
+          `mongodb://${process.env.MONGODB_HOST || 'localhost'}:${process.env.MONGODB_PORT || '27017'}/${process.env.MONGODB_DATABASE || 'uniflow_notifications'}`;
+
+        return {
+          uri,
+          retryWrites: true,
+          w: 'majority',
+          // For Azure CosmosDB compatibility
+          ssl: process.env.NODE_ENV === 'production',
+          authSource: process.env.MONGODB_AUTH_SOURCE || 'admin',
+        };
+      },
     }),
     NotificationModule,
   ],

@@ -1,11 +1,14 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
+import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule } from '@nestjs/config';
 
-import { NotificationTypeOrmEntity } from './infrastructure/persistence/entities/notification.typeorm-entity';
-import { TypeOrmNotificationRepository } from './infrastructure/persistence/typeorm-notification.repository';
+import {
+  NotificationSchema,
+  NotificationMongoSchema,
+} from './infrastructure/persistence/schemas/notification.schema';
+import { MongoNotificationRepository } from './infrastructure/persistence/mongodb-notification.repository';
 import { AzureNotificationAdapter } from './infrastructure/external-services/azure-notification.adapter';
-import { MockUserAdapter } from './infrastructure/external-services/mock-user.adapter';
+import { UserServiceAdapter } from './infrastructure/external-services/user-service.adapter';
 import { NotificationController } from './infrastructure/web/notification.controller';
 
 import { NotificationDomainService } from './domain/services/notification-domain.service';
@@ -14,19 +17,20 @@ import { GetUserNotificationsUseCase } from './application/use-cases/get-user-no
 import { MarkNotificationAsReadUseCase } from './application/use-cases/mark-notification-as-read.use-case';
 import { GetUnreadCountUseCase } from './application/use-cases/get-unread-count.use-case';
 import { DeleteNotificationUseCase } from './application/use-cases/delete-notification.use-case';
-import { UserServiceAdapter } from './infrastructure/external-services/user-service.adapter';
 
 @Module({
   imports: [
     ConfigModule,
-    TypeOrmModule.forFeature([NotificationTypeOrmEntity]),
+    MongooseModule.forFeature([
+      { name: NotificationSchema.name, schema: NotificationMongoSchema },
+    ]),
   ],
   controllers: [NotificationController],
   providers: [
     NotificationDomainService,
     {
       provide: 'INotificationRepository',
-      useClass: TypeOrmNotificationRepository,
+      useClass: MongoNotificationRepository,
     },
     {
       provide: 'NotificationSenderPort',
@@ -50,4 +54,4 @@ import { UserServiceAdapter } from './infrastructure/external-services/user-serv
     DeleteNotificationUseCase,
   ],
 })
-export class NotificationModule { }
+export class NotificationModule {}

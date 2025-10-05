@@ -3,45 +3,64 @@ import { NotificationId } from '../../../domain/value-objects/notification-id';
 import { UserId } from '../../../domain/value-objects/user-id';
 import { NotificationType } from '../../../domain/value-objects/notification-type';
 import { Priority } from '../../../domain/value-objects/priority';
-import { NotificationTypeOrmEntity } from '../entities/notification.typeorm-entity';
+import { NotificationDocument } from '../schemas/notification.schema';
 
 export class NotificationMapper {
-  static toDomain(entity: NotificationTypeOrmEntity): Notification {
+  static toDomain(document: NotificationDocument): Notification {
     return Notification.fromPersistence({
-      id: new NotificationId(entity.id),
-      userId: new UserId(entity.userId),
-      title: entity.title,
-      message: entity.message,
-      type: NotificationType.fromString(entity.type),
-      priority: Priority.fromString(entity.priority),
-      isRead: entity.isRead,
-      createdAt: entity.createdAt,
-      readAt: entity.readAt,
-      taskId: entity.taskId,
-      subjectId: entity.subjectId,
-      actionUrl: entity.actionUrl,
-      scheduledFor: entity.scheduledFor,
+      id: new NotificationId(String(document.id || document._id)),
+      userId: new UserId(document.userId),
+      title: document.title,
+      message: document.message,
+      type: NotificationType.fromString(document.type),
+      priority: Priority.fromString(document.priority),
+      isRead: document.isRead,
+      createdAt: document.createdAt,
+      readAt: document.readAt,
+      taskId: document.taskId,
+      subjectId: document.subjectId,
+      actionUrl: document.actionUrl,
+      scheduledFor: document.scheduledFor,
     });
   }
 
-  static toTypeOrm(notification: Notification): NotificationTypeOrmEntity {
+  static toMongo(notification: Notification): Partial<NotificationDocument> {
     const props = notification.toProps();
-    const entity = new NotificationTypeOrmEntity();
 
-    entity.id = props.id.getValue();
-    entity.userId = props.userId.getValue();
-    entity.title = props.title;
-    entity.message = props.message;
-    entity.type = props.type.getValue();
-    entity.priority = props.priority.getValue();
-    entity.isRead = props.isRead;
-    entity.createdAt = props.createdAt;
-    entity.readAt = props.readAt;
-    entity.taskId = props.taskId;
-    entity.subjectId = props.subjectId;
-    entity.actionUrl = props.actionUrl;
-    entity.scheduledFor = props.scheduledFor;
+    return {
+      _id: notification.getId().getValue(),
+      userId: props.userId.getValue(),
+      title: props.title,
+      message: props.message,
+      type: props.type.getValue(),
+      priority: props.priority.getValue(),
+      isRead: props.isRead,
+      createdAt: props.createdAt,
+      readAt: props.readAt,
+      taskId: props.taskId,
+      subjectId: props.subjectId,
+      actionUrl: props.actionUrl,
+      scheduledFor: props.scheduledFor,
+    };
+  }
 
-    return entity;
+  static toMongoUpdate(
+    notification: Notification,
+  ): Partial<NotificationDocument> {
+    const props = notification.toProps();
+
+    return {
+      _id: notification.getId().getValue(),
+      title: props.title,
+      message: props.message,
+      type: props.type.getValue(),
+      priority: props.priority.getValue(),
+      isRead: props.isRead,
+      readAt: props.readAt,
+      taskId: props.taskId,
+      subjectId: props.subjectId,
+      actionUrl: props.actionUrl,
+      scheduledFor: props.scheduledFor,
+    };
   }
 }
