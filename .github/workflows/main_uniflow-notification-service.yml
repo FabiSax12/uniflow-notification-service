@@ -27,10 +27,18 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Run linter
+        run: pnpm run lint
+        continue-on-error: true
+
+      - name: Run tests
+        run: pnpm run test
+        continue-on-error: true
+
       - name: Build application
         run: pnpm run build
 
-      - name: Install production dependencies only
+      - name: Clean and install production dependencies
         run: |
           rm -rf node_modules
           pnpm install --prod --frozen-lockfile
