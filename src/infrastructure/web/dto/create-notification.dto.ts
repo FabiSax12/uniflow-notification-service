@@ -1,24 +1,13 @@
-import { IsString, IsNotEmpty, IsOptional, IsIn, IsDateString, IsEmail } from 'class-validator';
+import { IsString, IsOptional, IsDateString, IsIn } from 'class-validator';
 
 export class CreateNotificationDto {
   @IsString()
-  @IsNotEmpty()
   userId: string;
 
-  @IsEmail()
-  @IsNotEmpty()
-  userEmail: string;
-
   @IsString()
-  @IsNotEmpty()
-  userName: string;
-
-  @IsString()
-  @IsNotEmpty()
   title: string;
 
   @IsString()
-  @IsNotEmpty()
   message: string;
 
   @IsString()
@@ -36,6 +25,10 @@ export class CreateNotificationDto {
   @IsOptional()
   @IsString()
   subjectId?: string;
+
+  @IsOptional()
+  @IsString()
+  actionUrl?: string;
 
   @IsOptional()
   @IsDateString()

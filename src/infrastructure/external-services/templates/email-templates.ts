@@ -1,19 +1,10 @@
-export interface EmailTemplate {
-  subject: string;
-  html: string;
-  text: string;
-}
-
 export class EmailTemplates {
-  /**
-   * Template para recordatorio de deadline
-   */
   static deadlineReminder(data: {
     userName: string;
     taskTitle: string;
     dueDate: string;
     taskUrl: string;
-  }): EmailTemplate {
+  }) {
     const subject = `⏰ Recordatorio: "${data.taskTitle}" vence pronto`;
 
     const html = `
@@ -161,16 +152,13 @@ UniFlow - Sistema de Gestión Académica
     return { subject, html, text };
   }
 
-  /**
-   * Template para nueva tarea creada
-   */
   static taskCreated(data: {
     userName: string;
     taskTitle: string;
     subjectName: string;
     dueDate: string;
     taskUrl: string;
-  }): EmailTemplate {
+  }) {
     const subject = `📋 Nueva tarea: "${data.taskTitle}"`;
 
     const html = `
@@ -295,16 +283,13 @@ UniFlow
     return { subject, html, text };
   }
 
-  /**
-   * Template genérico para notificaciones
-   */
   static generic(data: {
     userName: string;
     title: string;
     message: string;
     actionUrl?: string;
     actionText?: string;
-  }): EmailTemplate {
+  }) {
     const subject = data.title;
 
     const html = `
@@ -371,13 +356,17 @@ UniFlow
 
       <p>${data.message}</p>
 
-      ${data.actionUrl ? `
+      ${
+        data.actionUrl
+          ? `
       <div style="text-align: center;">
         <a href="${data.actionUrl}" class="cta-button">
           ${data.actionText || 'Ver Más'} →
         </a>
       </div>
-      ` : ''}
+      `
+          : ''
+      }
     </div>
 
     <div class="footer">

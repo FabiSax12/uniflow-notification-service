@@ -1,0 +1,93 @@
+import { Injectable } from '@nestjs/common';
+import { Notification } from '../../domain/entities/notification';
+import { NotificationDomainService } from '../../domain/services/notification-domain.service';
+import type { INotificationRepository } from '../../domain/repositories/notification-repository.interface';
+import type { NotificationSenderPort } from '../ports/notification-sender.port';
+import type { UserServicePort } from '../ports/user-service.port';
+import { Inject } from '@nestjs/common';
+import { UserId } from '../../domain/value-objects/user-id';
+import { NotificationType } from '../../domain/value-objects/notification-type';
+import { Priority } from '../../domain/value-objects/priority';
+
+export interface CreateNotificationCommand {
+  userId: string;
+  title: string;
+  message: string;
+  type: string;
+  priority: string;
+  taskId?: string;
+  subjectId?: string;
+  actionUrl?: string;
+  scheduledFor?: string;
+}
+
+@Injectable()
+export class CreateNotificationUseCase {
+  constructor(
+    @Inject('INotificationRepository')
+    private readonly notificationRepository: INotificationRepository,
+    private readonly notificationDomainService: NotificationDomainService,
+    @Inject('NotificationSenderPort')
+    private readonly notificationSender: NotificationSenderPort,
+    @Inject('UserServicePort')
+    private readonly userService: UserServicePort,
+  ) {}
+
+  async execute(command: CreateNotificationCommand): Promise<Notification> {
+    const userId = new UserId(command.userId);
+    const type = NotificationType.fromString(command.type);
+    const priority = Priority.fromString(command.priority);
+
+    const scheduledFor = command.scheduledFor
+      ? new Date(command.scheduledFor)
+      : undefined;
+
+    if (scheduledFor) {
+      this.notificationDomainService.validateScheduledTime(scheduledFor);
+    }
+
+    const notification = this.notificationDomainService.createNotification({
+      userId,
+      title: command.title,
+      message: command.message,
+      type,
+      priority,
+      taskId: command.taskId,
+      subjectId: command.subjectId,
+      actionUrl: command.actionUrl,
+      scheduledFor,
+    });
+
+    const savedNotification =
+      await this.notificationRepository.save(notification);
+
+    if (
+      this.notificationDomainService.shouldSendImmediately(savedNotification)
+    ) {
+      await this.sendNotification(savedNotification);
+    }
+
+    return savedNotification;
+  }
+
+  private async sendNotification(notification: Notification): Promise<void> {
+    try {
+      const user = await this.userService.getUserById(notification.getUserId());
+
+      const [pushSent, emailSent] = await Promise.allSettled([
+        this.notificationSender.sendPushNotification(user, notification),
+        this.notificationSender.sendEmailNotification(user, notification),
+      ]);
+
+      if (pushSent.status === 'rejected') {
+        console.error('Failed to send push notification:', pushSent.reason);
+      }
+
+      if (emailSent.status === 'rejected') {
+        console.error('Failed to send email notification:', emailSent.reason);
+      }
+    } catch (error) {
+      console.error('Failed to send notification:', error);
+    }
+  }
+}
