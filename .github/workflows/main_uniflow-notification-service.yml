@@ -22,6 +22,11 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: '22.x'
+          
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 10
 
       - name: pnpm install, build, and test
         env:
@@ -81,3 +86,4 @@ jobs:
           package: .
 
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_C65851A2C29B4D3ABDC3CFF98CB1EF0F }}
+
