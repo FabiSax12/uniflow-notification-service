@@ -9,42 +9,34 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Node.js version
+      - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '22.x'
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v2
-        with:
-          version: 10
+          cache: 'npm'  # Caché automático
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: npm ci
 
-      - name: Build application
-        run: pnpm run build
+      - name: Build
+        run: npm run build
 
-      - name: Run tests
-        run: pnpm run test --passWithNoTests
+      - name: Test
+        run: npm test -- --passWithNoTests
 
-      # CRÍTICO: Instalar SOLO dependencias de producción en una carpeta limpia
-      - name: Install production dependencies
+      # Crear package de deployment con node_modules de producción
+      - name: Prepare deployment package
         run: |
-          mkdir -p deployment
+          mkdir deployment
           cp -r dist deployment/
-          cp package.json deployment/
-          cp pnpm-lock.yaml deployment/
+          cp package*.json deployment/
           cd deployment
-          pnpm install --prod --frozen-lockfile
+          npm ci --production --ignore-scripts
 
-      - name: Upload artifact for deployment job
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: node-app
