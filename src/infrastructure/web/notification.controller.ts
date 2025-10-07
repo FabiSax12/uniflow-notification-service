@@ -32,7 +32,7 @@ import {
 import { CreateNotificationDto } from './dto/create-notification.dto';
 import { NotificationResponseDto } from './dto/notification-response.dto';
 
-@Controller('notifications')
+@Controller()
 export class NotificationController {
   constructor(
     private readonly createNotificationUseCase: CreateNotificationUseCase,
@@ -42,7 +42,7 @@ export class NotificationController {
     private readonly deleteNotificationUseCase: DeleteNotificationUseCase,
   ) {}
 
-  @Post()
+  @Post('notifications')
   async create(
     @Body(ValidationPipe) dto: CreateNotificationDto,
   ): Promise<NotificationResponseDto> {
@@ -59,6 +59,7 @@ export class NotificationController {
     };
 
     const notification = await this.createNotificationUseCase.execute(command);
+
     return NotificationResponseDto.fromDomain(notification);
   }
 
@@ -98,13 +99,13 @@ export class NotificationController {
     return this.getUnreadCountUseCase.execute(query);
   }
 
-  @Put(':id/read')
+  @Put('notifications/:id/mark-read')
   async markAsRead(@Param('id') id: string) {
     const command: MarkNotificationAsReadCommand = { notificationId: id };
     return this.markNotificationAsReadUseCase.execute(command);
   }
 
-  @Delete(':id')
+  @Delete('notifications/:id')
   async delete(@Param('id') id: string): Promise<void> {
     const command: DeleteNotificationCommand = { notificationId: id };
     await this.deleteNotificationUseCase.execute(command);

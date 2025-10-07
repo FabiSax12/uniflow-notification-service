@@ -1,10 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import { Notification } from '../../domain/entities/notification';
 import { NotificationDomainService } from '../../domain/services/notification-domain.service';
 import type { INotificationRepository } from '../../domain/repositories/notification-repository.interface';
 import type { NotificationSenderPort } from '../ports/notification-sender.port';
+import type { NotificationBroadcasterPort } from '../ports/notification-broadcaster.port';
 import type { UserServicePort } from '../ports/user-service.port';
-import { Inject } from '@nestjs/common';
 import { UserId } from '../../domain/value-objects/user-id';
 import { NotificationType } from '../../domain/value-objects/notification-type';
 import { Priority } from '../../domain/value-objects/priority';
@@ -29,6 +29,8 @@ export class CreateNotificationUseCase {
     private readonly notificationDomainService: NotificationDomainService,
     @Inject('NotificationSenderPort')
     private readonly notificationSender: NotificationSenderPort,
+    @Inject('NotificationBroadcasterPort')
+    private readonly notificationBroadcaster: NotificationBroadcasterPort,
     @Inject('UserServicePort')
     private readonly userService: UserServicePort,
   ) {}
@@ -64,10 +66,26 @@ export class CreateNotificationUseCase {
     if (
       this.notificationDomainService.shouldSendImmediately(savedNotification)
     ) {
-      await this.sendNotification(savedNotification);
+      await Promise.all([
+        this.sendNotification(savedNotification),
+        this.broadcastNotification(savedNotification),
+      ]);
     }
 
     return savedNotification;
+  }
+
+  private async broadcastNotification(
+    notification: Notification,
+  ): Promise<void> {
+    try {
+      await this.notificationBroadcaster.broadcastToUser(
+        notification.getUserId().getValue(),
+        notification,
+      );
+    } catch (error) {
+      console.error('Failed to broadcast notification via WebSocket:', error);
+    }
   }
 
   private async sendNotification(notification: Notification): Promise<void> {

@@ -27,4 +27,4 @@ import { NotificationModule } from './notification.module';
     NotificationModule,
   ],
 })
-export class AppModule { }
+export class AppModule {}

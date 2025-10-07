@@ -7,6 +7,8 @@ async function bootstrap() {
 
   app.enableCors();
 
+  app.setGlobalPrefix('v1');
+
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true, // Elimina propiedades no definidas en el DTO
