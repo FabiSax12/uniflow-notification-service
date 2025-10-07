@@ -17,6 +17,7 @@ import { GetUserNotificationsUseCase } from './application/use-cases/get-user-no
 import { MarkNotificationAsReadUseCase } from './application/use-cases/mark-notification-as-read.use-case';
 import { GetUnreadCountUseCase } from './application/use-cases/get-unread-count.use-case';
 import { DeleteNotificationUseCase } from './application/use-cases/delete-notification.use-case';
+import { NotificationsGateway } from './infrastructure/web/notification.gateway';
 
 @Module({
   imports: [
@@ -37,9 +38,14 @@ import { DeleteNotificationUseCase } from './application/use-cases/delete-notifi
       useClass: AzureNotificationAdapter,
     },
     {
+      provide: 'NotificationBroadcasterPort',
+      useClass: NotificationsGateway,
+    },
+    {
       provide: 'UserServicePort',
       useClass: UserServiceAdapter,
     },
+    NotificationsGateway,
     CreateNotificationUseCase,
     GetUserNotificationsUseCase,
     MarkNotificationAsReadUseCase,
