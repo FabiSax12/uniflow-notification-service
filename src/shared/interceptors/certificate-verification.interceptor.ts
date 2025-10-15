@@ -25,11 +25,10 @@ export class CertificateVerificationInterceptor implements NestInterceptor {
     this.allowedThumbprints = new Set(
       thumbprintsEnv
         .split(',')
-        .map((thumbprint) => thumbprint.trim().toLowerCase())
+        .map((thumbprint) => thumbprint.trim().toUpperCase())
         .filter((thumbprint) => thumbprint.length > 0),
     );
 
-    // Detectar si estamos en Azure
     this.isAzure = !!this.configService.get<string>('WEBSITE_INSTANCE_ID');
 
     if (this.allowedThumbprints.size === 0) {
@@ -46,7 +45,6 @@ export class CertificateVerificationInterceptor implements NestInterceptor {
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     const contextType = context.getType();
 
-    // Skip certificate verification for WebSocket connections
     if (contextType === 'ws') {
       this.logger.debug('Skipping certificate verification for WebSocket connection');
       return next.handle();
@@ -54,17 +52,14 @@ export class CertificateVerificationInterceptor implements NestInterceptor {
 
     const request = context.switchToHttp().getRequest();
 
-    // Skip certificate verification for Socket.IO connections
     if (this.isWebSocketRequest(request)) {
       this.logger.debug('Skipping certificate verification for Socket.IO/WebSocket request');
       return next.handle();
     }
 
-    // En Azure, el certificado viene en un header
     if (this.isAzure) {
       this.verifyAzureCertificate(request);
     } else {
-      // En local o servidor con TLS directo
       this.verifyDirectTLSCertificate(request);
     }
 
@@ -73,9 +68,9 @@ export class CertificateVerificationInterceptor implements NestInterceptor {
 
   /**
    * Verificar certificado en Azure Web App (desde header)
+   * Replicando exactamente la lógica de Java/Spring Boot
    */
   private verifyAzureCertificate(request: any): void {
-    // Azure pone el certificado en este header (base64)
     const certHeader = request.headers['x-arr-clientcert'];
 
     if (!certHeader) {
@@ -86,20 +81,16 @@ export class CertificateVerificationInterceptor implements NestInterceptor {
     }
 
     try {
-      // Decodificar el certificado de base64
-      const certPem = Buffer.from(certHeader, 'base64').toString('utf-8');
+      const certBytes = Buffer.from(certHeader, 'base64');
 
-      // Extraer el certificado en formato DER del PEM
-      const certDer = this.pemToDer(certPem);
-
-      // Calcular thumbprint SHA-1
       const thumbprint = crypto
         .createHash('sha1')
-        .update(certDer)
+        .update(certBytes)
         .digest('hex')
-        .toLowerCase();
+        .toUpperCase();
 
-      // Verificar contra lista permitida
+      this.logger.debug(`Calculated thumbprint: ${thumbprint}`);
+
       if (!this.allowedThumbprints.has(thumbprint)) {
         this.logger.error(
           `Certificate verification failed: Thumbprint ${thumbprint} not in allowed list`,
@@ -119,9 +110,6 @@ export class CertificateVerificationInterceptor implements NestInterceptor {
     }
   }
 
-  /**
-   * Verificar certificado en conexión TLS directa (para desarrollo local)
-   */
   private verifyDirectTLSCertificate(request: any): void {
     const socket = request.socket;
 
@@ -155,23 +143,6 @@ export class CertificateVerificationInterceptor implements NestInterceptor {
     );
   }
 
-  /**
-   * Convertir certificado PEM a formato DER
-   */
-  private pemToDer(pem: string): Buffer {
-    // Remover headers y footers del PEM
-    const pemContent = pem
-      .replace(/-----BEGIN CERTIFICATE-----/, '')
-      .replace(/-----END CERTIFICATE-----/, '')
-      .replace(/\s/g, '');
-
-    // Decodificar base64 a DER
-    return Buffer.from(pemContent, 'base64');
-  }
-
-  /**
-   * Calcular thumbprint de certificado TLS directo
-   */
   private calculateThumbprint(certificate: any): string {
     const derCertificate = certificate.raw;
 
@@ -179,15 +150,12 @@ export class CertificateVerificationInterceptor implements NestInterceptor {
       throw new UnauthorizedException('Unable to extract certificate data');
     }
 
-    const hash = crypto.createHash('sha256');
+    const hash = crypto.createHash('sha1');
     hash.update(derCertificate);
 
-    return hash.digest('hex').toLowerCase();
+    return hash.digest('hex').toUpperCase();
   }
 
-  /**
-   * Check if the request is a WebSocket upgrade request
-   */
   private isWebSocketRequest(request: any): boolean {
     const upgrade = request.headers?.upgrade?.toLowerCase();
     const connection = request.headers?.connection?.toLowerCase();
