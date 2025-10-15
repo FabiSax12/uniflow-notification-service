@@ -2,6 +2,8 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { ConfigService } from '@nestjs/config';
+import { CertificateVerificationInterceptor } from './shared/interceptors';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -9,6 +11,19 @@ async function bootstrap() {
   app.enableCors();
 
   app.enableVersioning();
+
+  // Apply certificate verification interceptor globally if enabled
+  const configService = app.get(ConfigService);
+  const thumbprints = configService.get<string>('ALLOWED_CERTIFICATE_THUMBPRINTS', '');
+
+  if (thumbprints && thumbprints.trim().length > 0) {
+    app.useGlobalInterceptors(
+      new CertificateVerificationInterceptor(configService),
+    );
+    console.log('Certificate verification enabled');
+  } else {
+    console.log('Certificate verification disabled (no thumbprints configured)');
+  }
 
   app.useGlobalPipes(
     new ValidationPipe({

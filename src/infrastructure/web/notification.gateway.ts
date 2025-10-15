@@ -17,12 +17,8 @@ import { NotificationResponseDto } from './dto/notification-response.dto';
     credentials: true,
   },
 })
-export class NotificationsGateway
-  implements
-    OnGatewayConnection,
-    OnGatewayDisconnect,
-    NotificationBroadcasterPort
-{
+export class NotificationsGateway implements OnGatewayConnection, OnGatewayDisconnect, NotificationBroadcasterPort {
+
   @WebSocketServer()
   server: Server;
 
