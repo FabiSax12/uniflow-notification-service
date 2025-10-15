@@ -92,9 +92,9 @@ export class CertificateVerificationInterceptor implements NestInterceptor {
       // Extraer el certificado en formato DER del PEM
       const certDer = this.pemToDer(certPem);
 
-      // Calcular thumbprint SHA-256
+      // Calcular thumbprint SHA-1
       const thumbprint = crypto
-        .createHash('sha256')
+        .createHash('sha1')
         .update(certDer)
         .digest('hex')
         .toLowerCase();
