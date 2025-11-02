@@ -46,6 +46,7 @@ import { UnreadCountResponseDto } from './dto/unread-count-response.dto';
 import { MarkReadResponseDto } from './dto/mark-read-response.dto';
 
 @ApiTags('Notifications')
+@Controller()
 export class NotificationController {
   constructor(
     private readonly createNotificationUseCase: CreateNotificationUseCase,
