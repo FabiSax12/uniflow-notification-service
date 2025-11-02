@@ -10,8 +10,6 @@ async function bootstrap() {
 
   app.enableCors();
 
-  app.enableVersioning();
-
   // Apply certificate verification interceptor globally if enabled
   const configService = app.get(ConfigService);
   const thumbprints = configService.get<string>('ALLOWED_CERTIFICATE_THUMBPRINTS', '');
@@ -69,7 +67,7 @@ The service also provides WebSocket support for real-time notifications:
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api/docs', app, document, {
+  SwaggerModule.setup('/docs', app, document, {
     customSiteTitle: 'Uniflow Notification Service API',
     customfavIcon: 'https://uniflow.com/favicon.ico',
     customCss: '.swagger-ui .topbar { display: none }',
@@ -86,7 +84,7 @@ The service also provides WebSocket support for real-time notifications:
 
   console.log(`🚀 Application is running on: http://localhost:${port}`);
   console.log(
-    `📚 Swagger documentation available at: http://localhost:${port}/api/docs`,
+    `📚 Swagger documentation available at: http://localhost:${port}/docs`,
   );
 }
 void bootstrap();
