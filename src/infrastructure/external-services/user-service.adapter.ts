@@ -22,30 +22,46 @@ export class UserServiceAdapter implements UserServicePort {
 
   constructor(@Inject(CACHE_MANAGER) private cacheManager: Cache) {
     this.userServiceUrl =
-      process.env.ACADEMIC_SERVICE_URL || 'http://localhost:3001/api/users';
+      process.env.ACADEMIC_SERVICE_URL || 'http://localhost:3001';
     this.cacheTTL = parseInt(process.env.USER_CACHE_TTL || '3600', 10); // 1 hour default
+
+    this.logger.log(`🚀 UserServiceAdapter initialized`);
+    this.logger.log(`📍 User Service URL: ${this.userServiceUrl}`);
+    this.logger.log(`🔑 Cache Key Prefix: "${this.cacheKeyPrefix}"`);
+    this.logger.log(`⏱️  Cache TTL: ${this.cacheTTL}s`);
+    this.logger.log(`💾 Cache Manager Type: ${this.cacheManager.constructor.name}`);
   }
 
   async getUserById(userId: UserId): Promise<User> {
     const cacheKey = `${this.cacheKeyPrefix}${userId.getValue()}`;
+
+    this.logger.debug(`🔍 Attempting to get user with ID: ${userId.getValue()}`);
+    this.logger.debug(`🔑 Cache key being used: "${cacheKey}"`);
+    this.logger.debug(`⏱️  Cache TTL configured: ${this.cacheTTL}s`);
 
     try {
       // Try to get from cache first
       const cachedUser =
         await this.cacheManager.get<StudentApiResponse>(cacheKey);
 
+      this.logger.debug(
+        `💾 Cache lookup result: ${cachedUser ? 'FOUND' : 'NOT FOUND'}`,
+      );
+
       if (cachedUser) {
-        this.logger.debug(`Cache hit for user ${userId.getValue()}`);
+        this.logger.debug(
+          `✅ Cache HIT for user ${userId.getValue()} - Data: ${JSON.stringify(cachedUser)}`,
+        );
         return this.mapApiResponseToUser(cachedUser);
       }
 
-      this.logger.debug(
-        `Cache miss for user ${userId.getValue()}, fetching from API`,
+      this.logger.warn(
+        `❌ Cache MISS for user ${userId.getValue()} - Fetching from API: ${this.userServiceUrl}/students/${userId.getValue()}`,
       );
 
       // Fetch from users microservice
       const response = await fetch(
-        `${this.userServiceUrl}/${userId.getValue()}`,
+        `${this.userServiceUrl}/students/${userId.getValue()}`,
         {
           method: 'GET',
           headers: {
@@ -62,9 +78,20 @@ export class UserServiceAdapter implements UserServicePort {
 
       const userData = (await response.json()) as StudentApiResponse;
 
+      this.logger.debug(`📥 Received data from API: ${JSON.stringify(userData)}`);
+
       // Store in cache
+      this.logger.debug(
+        `💾 Storing in cache with key: "${cacheKey}", TTL: ${this.cacheTTL}s`,
+      );
       await this.cacheManager.set(cacheKey, userData, this.cacheTTL);
-      this.logger.debug(`Cached user ${userId.getValue()}`);
+
+      // Verify cache was stored
+      const verification = await this.cacheManager.get(cacheKey);
+      this.logger.debug(
+        `✅ Cache verification: ${verification ? 'STORED SUCCESSFULLY' : '⚠️  STORAGE FAILED'}`,
+      );
+      this.logger.debug(`🔑 Cached Data: ${JSON.stringify(verification)}`);
 
       return this.mapApiResponseToUser(userData);
     } catch (error) {

@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { NotificationModule } from './notification.module';
+import { RedisCacheModule } from './infrastructure/cache';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { NotificationModule } from './notification.module';
       },
     }),
     NotificationModule,
+    RedisCacheModule
   ],
 })
-export class AppModule {}
+export class AppModule { }

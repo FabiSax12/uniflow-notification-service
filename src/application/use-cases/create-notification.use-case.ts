@@ -33,7 +33,7 @@ export class CreateNotificationUseCase {
     private readonly notificationBroadcaster: NotificationBroadcasterPort,
     @Inject('UserServicePort')
     private readonly userService: UserServicePort,
-  ) {}
+  ) { }
 
   async execute(command: CreateNotificationCommand): Promise<Notification> {
     const userId = new UserId(command.userId);
@@ -91,6 +91,8 @@ export class CreateNotificationUseCase {
   private async sendNotification(notification: Notification): Promise<void> {
     try {
       const user = await this.userService.getUserById(notification.getUserId());
+
+      console.log(`Sending notification to user ${user.getId().getValue()}`);
 
       const [pushSent, emailSent] = await Promise.allSettled([
         this.notificationSender.sendPushNotification(user, notification),

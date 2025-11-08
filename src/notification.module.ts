@@ -11,6 +11,7 @@ import { AzureNotificationAdapter } from './infrastructure/external-services/azu
 import { UserServiceAdapter } from './infrastructure/external-services/user-service.adapter';
 import { NotificationController } from './infrastructure/web/notification.controller';
 import { HealthController } from './infrastructure/web/health.controller';
+import { CacheDebugController } from './infrastructure/web/cache-debug.controller';
 
 import { NotificationDomainService } from './domain/services/notification-domain.service';
 import { CreateNotificationUseCase } from './application/use-cases/create-notification.use-case';
@@ -29,7 +30,7 @@ import { RedisCacheModule } from './infrastructure/cache/redis-cache.module';
       { name: NotificationSchema.name, schema: NotificationMongoSchema },
     ]),
   ],
-  controllers: [NotificationController, HealthController],
+  controllers: [NotificationController, HealthController, CacheDebugController],
   providers: [
     NotificationDomainService,
     {
