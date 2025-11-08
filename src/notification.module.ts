@@ -10,6 +10,7 @@ import { MongoNotificationRepository } from './infrastructure/persistence/mongod
 import { AzureNotificationAdapter } from './infrastructure/external-services/azure-notification.adapter';
 import { UserServiceAdapter } from './infrastructure/external-services/user-service.adapter';
 import { NotificationController } from './infrastructure/web/notification.controller';
+import { HealthController } from './infrastructure/web/health.controller';
 
 import { NotificationDomainService } from './domain/services/notification-domain.service';
 import { CreateNotificationUseCase } from './application/use-cases/create-notification.use-case';
@@ -18,15 +19,17 @@ import { MarkNotificationAsReadUseCase } from './application/use-cases/mark-noti
 import { GetUnreadCountUseCase } from './application/use-cases/get-unread-count.use-case';
 import { DeleteNotificationUseCase } from './application/use-cases/delete-notification.use-case';
 import { NotificationsGateway } from './infrastructure/web/notification.gateway';
+import { RedisCacheModule } from './infrastructure/cache/redis-cache.module';
 
 @Module({
   imports: [
     ConfigModule,
+    RedisCacheModule,
     MongooseModule.forFeature([
       { name: NotificationSchema.name, schema: NotificationMongoSchema },
     ]),
   ],
-  controllers: [NotificationController],
+  controllers: [NotificationController, HealthController],
   providers: [
     NotificationDomainService,
     {
@@ -60,4 +63,4 @@ import { NotificationsGateway } from './infrastructure/web/notification.gateway'
     DeleteNotificationUseCase,
   ],
 })
-export class NotificationModule {}
+export class NotificationModule { }

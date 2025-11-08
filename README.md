@@ -23,7 +23,83 @@
 
 ## Description
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+Uniflow Notification Service - A microservice for managing and delivering notifications across multiple channels (Email, Push, WebSocket) built with NestJS following Clean Architecture principles.
+
+## Features
+
+- 📧 Email notifications via Azure Communication Services
+- 📱 Push notifications via Azure Notification Hubs
+- 🔔 Real-time WebSocket notifications
+- 💾 MongoDB persistence
+- 🚀 Redis caching for user data
+- 🏗️ Clean Architecture (Domain, Application, Infrastructure layers)
+- 🔐 Certificate-based authentication
+- 📊 Swagger API documentation
+
+## Architecture
+
+The service follows Clean Architecture principles:
+
+- **Domain Layer**: Entities, Value Objects, and Business Logic
+- **Application Layer**: Use Cases and Port Interfaces
+- **Infrastructure Layer**: External Services, Persistence, and Web Controllers
+
+## Project setup
+
+```bash
+$ pnpm install
+```
+
+## Environment Configuration
+
+Copy `.env.example` to `.env` and configure the following:
+
+### MongoDB
+```env
+MONGODB_URI=mongodb://localhost:27017/uniflow_notifications
+```
+
+### Redis (User Cache)
+```env
+REDIS_HOST=localhost
+REDIS_PORT=6379
+REDIS_PASSWORD=
+REDIS_TTL=3600
+REDIS_MAX_ITEMS=100
+```
+
+### User Service Integration
+```env
+ACADEMIC_SERVICE_URL=http://localhost:3001/api/users
+USER_CACHE_TTL=3600
+```
+
+### Azure Services
+```env
+AZURE_COMMUNICATION_CONNECTION_STRING=your_connection_string
+AZURE_COMMUNICATION_SENDER_ADDRESS=your_sender_address
+AZURE_NOTIFICATION_HUB_CONNECTION_STRING=your_hub_connection
+AZURE_NOTIFICATION_HUB_NAME=your_hub_name
+```
+
+## Redis Cache Implementation
+
+The service implements Redis caching for user data retrieved from the Users microservice:
+
+- **Cache Key Pattern**: `user:{userId}`
+- **Default TTL**: 1 hour (configurable via `USER_CACHE_TTL`)
+- **Cache Strategy**: Cache-aside pattern
+  1. Check cache first
+  2. On cache miss, fetch from Users microservice
+  3. Store in cache for subsequent requests
+
+### Cache Invalidation
+
+You can invalidate user cache programmatically:
+
+```typescript
+await userServiceAdapter.invalidateUserCache(userId);
+```
 
 ## Project setup
 
