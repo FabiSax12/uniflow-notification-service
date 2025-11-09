@@ -56,12 +56,12 @@ export class UserServiceAdapter implements UserServicePort {
       }
 
       this.logger.warn(
-        `❌ Cache MISS for user ${userId.getValue()} - Fetching from API: ${this.userServiceUrl}/students/${userId.getValue()}`,
+        `❌ Cache MISS for user ${userId.getValue()} - Fetching from API: ${this.userServiceUrl}/students/google/${userId.getValue()}`,
       );
 
       // Fetch from users microservice
       const response = await fetch(
-        `${this.userServiceUrl}/students/${userId.getValue()}`,
+        `${this.userServiceUrl}/students/google/${userId.getValue()}`,
         {
           method: 'GET',
           headers: {
@@ -84,7 +84,7 @@ export class UserServiceAdapter implements UserServicePort {
       this.logger.debug(
         `💾 Storing in cache with key: "${cacheKey}", TTL: ${this.cacheTTL}s`,
       );
-      await this.cacheManager.set(cacheKey, userData, this.cacheTTL);
+      await this.cacheManager.set(cacheKey, userData, this.cacheTTL * 1000);
 
       // Verify cache was stored
       const verification = await this.cacheManager.get(cacheKey);
