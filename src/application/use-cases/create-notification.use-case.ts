@@ -8,9 +8,13 @@ import type { UserServicePort } from '../ports/user-service.port';
 import { UserId } from '../../domain/value-objects/user-id';
 import { NotificationType } from '../../domain/value-objects/notification-type';
 import { Priority } from '../../domain/value-objects/priority';
+import { User } from 'src/domain/entities/user';
+import { Email } from 'src/domain/value-objects/email';
 
 export interface CreateNotificationCommand {
   userId: string;
+  name: string;
+  email: string;
   title: string;
   message: string;
   type: string;
@@ -33,7 +37,7 @@ export class CreateNotificationUseCase {
     private readonly notificationBroadcaster: NotificationBroadcasterPort,
     @Inject('UserServicePort')
     private readonly userService: UserServicePort,
-  ) {}
+  ) { }
 
   async execute(command: CreateNotificationCommand): Promise<Notification> {
     const userId = new UserId(command.userId);
@@ -60,14 +64,13 @@ export class CreateNotificationUseCase {
       scheduledFor,
     });
 
-    const savedNotification =
-      await this.notificationRepository.save(notification);
+    const savedNotification = await this.notificationRepository.save(notification);
 
     if (
       this.notificationDomainService.shouldSendImmediately(savedNotification)
     ) {
       await Promise.all([
-        this.sendNotification(savedNotification),
+        this.sendNotification(savedNotification, command.name, command.email),
         this.broadcastNotification(savedNotification),
       ]);
     }
@@ -88,9 +91,15 @@ export class CreateNotificationUseCase {
     }
   }
 
-  private async sendNotification(notification: Notification): Promise<void> {
+  private async sendNotification(notification: Notification, name: string, email: string): Promise<void> {
     try {
-      const user = await this.userService.getUserById(notification.getUserId());
+      // const user = await this.userService.getUserById(notification.getUserId());
+      const user = User.create({
+        id: notification.getUserId(),
+        name: name,
+        email: new Email(email),
+        deviceTokens: [],
+      })
 
       const [pushSent, emailSent] = await Promise.allSettled([
         this.notificationSender.sendPushNotification(user, notification),

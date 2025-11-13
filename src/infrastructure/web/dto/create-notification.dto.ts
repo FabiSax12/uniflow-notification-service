@@ -10,6 +10,20 @@ export class CreateNotificationDto {
   userId: string;
 
   @ApiProperty({
+    description: 'The name of the user to receive the notification',
+    example: 'Fabian Vargas',
+  })
+  @IsString()
+  name: string;
+
+  @ApiProperty({
+    description: 'The email of the user to receive the notification',
+    example: 'fabian.vargas@example.com',
+  })
+  @IsString()
+  email: string;
+
+  @ApiProperty({
     description: 'The title of the notification',
     example: 'Assignment Due Tomorrow',
     maxLength: 200,

@@ -77,6 +77,8 @@ export class NotificationController {
   ): Promise<NotificationResponseDto> {
     const command: CreateNotificationCommand = {
       userId: dto.userId,
+      name: dto.name,
+      email: dto.email,
       title: dto.title,
       message: dto.message,
       type: dto.type,
