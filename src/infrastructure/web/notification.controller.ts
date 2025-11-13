@@ -9,6 +9,8 @@ import {
   Query,
   ValidationPipe,
   HttpStatus,
+  Req,
+  Headers
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -129,10 +131,19 @@ export class NotificationController {
   })
   async findByUser(
     @Param('userId') userId: string,
+    @Headers() headers: Record<string, string>,
     @Query('limit') limit?: number,
     @Query('offset') offset?: number,
     @Query('isRead') isRead?: boolean,
   ): Promise<NotificationListResponseDto> {
+
+    const userIdFromHeader = headers["x-user-id"];
+    const userNameFromHeader = headers["x-user-name"];
+    const userEmailFromHeader = headers["x-user-email"];
+    const userPictureFromHeader = headers["x-user-picture"];
+
+    console.log("User Headers", userIdFromHeader, userNameFromHeader, userEmailFromHeader, userPictureFromHeader);
+
     const query: GetUserNotificationsQuery = {
       userId,
       limit: limit ? parseInt(limit.toString()) : undefined,
