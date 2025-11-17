@@ -9,8 +9,8 @@ import {
   Query,
   ValidationPipe,
   HttpStatus,
-  Req,
-  Headers
+  Headers,
+  HttpCode
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -216,6 +216,7 @@ export class NotificationController {
     return this.markNotificationAsReadUseCase.execute(command);
   }
 
+  @HttpCode(HttpStatus.NO_CONTENT)
   @Delete('notifications/:id')
   @ApiOperation({
     summary: 'Delete notification',
